@@ -59,9 +59,13 @@ jobs:
           }'''
           if old not in s:
               raise SystemExit("No se encontró kotlinOptions esperado")
-          p.write_text(s.replace(old, new))
+          s = s.replace(old, new)
+          s = s.replace('androidx.compose:compose-bom:2026.09.00', 'androidx.compose:compose-bom:2025.08.00')
+          s = s.replace('androidx.activity:activity-compose:1.13.0', 'androidx.activity:activity-compose:1.11.0')
+          p.write_text(s)
           PY
           grep -n -A5 -B2 "compilerOptions" ManualConvivenciaIEAG/app/build.gradle.kts
+          grep -n "compose-bom\|activity-compose" ManualConvivenciaIEAG/app/build.gradle.kts
 
       - name: Build debug APK
         working-directory: ManualConvivenciaIEAG
