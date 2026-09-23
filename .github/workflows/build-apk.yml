@@ -44,6 +44,25 @@ jobs:
           test -d ManualConvivenciaIEAG
           ls -la ManualConvivenciaIEAG
 
+      - name: Update Kotlin compiler DSL
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("ManualConvivenciaIEAG/app/build.gradle.kts")
+          s = p.read_text()
+          old = '    kotlinOptions { jvmTarget = "17" }'
+          new = '''    kotlin {
+              compilerOptions {
+                  jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+              }
+          }'''
+          if old not in s:
+              raise SystemExit("No se encontró kotlinOptions esperado")
+          p.write_text(s.replace(old, new))
+          PY
+          grep -n -A5 -B2 "compilerOptions" ManualConvivenciaIEAG/app/build.gradle.kts
+
       - name: Build debug APK
         working-directory: ManualConvivenciaIEAG
         run: gradle --no-daemon :app:assembleDebug
