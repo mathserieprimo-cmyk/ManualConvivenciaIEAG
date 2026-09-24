@@ -24,8 +24,12 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
+        shell: bash
+        run: |
+          SDKMANAGER=/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Set up Gradle 8.13
         uses: gradle/actions/setup-gradle@v4
@@ -35,10 +39,14 @@ jobs:
       - name: Reconstruct project
         shell: bash
         run: |
-          cat source_parts/part*.txt | tr -d '\n\r' | base64 -d > source.zip
+          if [ -d v02_parts ]; then
+            cat v02_parts/part*.txt | tr -d '\n\r' | base64 -d > source.zip
+          else
+            cat source_parts/part*.txt | tr -d '\n\r' | base64 -d > source.zip
+          fi
           unzip -q source.zip
           test -d ManualConvivenciaIEAG
-          ls -la ManualConvivenciaIEAG
+          grep -n "versionName" ManualConvivenciaIEAG/app/build.gradle.kts
 
       - name: Build debug APK
         working-directory: ManualConvivenciaIEAG
