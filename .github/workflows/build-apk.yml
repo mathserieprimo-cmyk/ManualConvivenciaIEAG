@@ -1,10 +1,8 @@
-name: Build Android APK
+name: Build Android APK v0.2
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: [ "build-v0.2" ]
   workflow_dispatch:
 
 permissions:
@@ -36,36 +34,13 @@ jobs:
         with:
           gradle-version: '8.13'
 
-      - name: Reconstruct project
+      - name: Reconstruct v0.2 project
         shell: bash
         run: |
-          cat source_parts/part*.txt | tr -d '\n\r' | base64 -d > source.zip
-          unzip -q source.zip
+          cat v02_parts/part*.txt | tr -d '\n\r' | base64 -d > source-v02.zip
+          unzip -q source-v02.zip
           test -d ManualConvivenciaIEAG
-          ls -la ManualConvivenciaIEAG
-
-      - name: Update Kotlin compiler DSL
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path("ManualConvivenciaIEAG/app/build.gradle.kts")
-          s = p.read_text()
-          old = '    kotlinOptions { jvmTarget = "17" }'
-          new = '''    kotlin {
-              compilerOptions {
-                  jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-              }
-          }'''
-          if old not in s:
-              raise SystemExit("No se encontró kotlinOptions esperado")
-          s = s.replace(old, new)
-          s = s.replace('androidx.compose:compose-bom:2026.09.00', 'androidx.compose:compose-bom:2025.08.00')
-          s = s.replace('androidx.activity:activity-compose:1.13.0', 'androidx.activity:activity-compose:1.11.0')
-          p.write_text(s)
-          PY
-          grep -n -A5 -B2 "compilerOptions" ManualConvivenciaIEAG/app/build.gradle.kts
-          grep -n "compose-bom\|activity-compose" ManualConvivenciaIEAG/app/build.gradle.kts
+          grep -n "versionName" ManualConvivenciaIEAG/app/build.gradle.kts
 
       - name: Build debug APK
         working-directory: ManualConvivenciaIEAG
@@ -73,11 +48,11 @@ jobs:
 
       - name: Rename APK
         run: |
-          cp ManualConvivenciaIEAG/app/build/outputs/apk/debug/app-debug.apk Manual-Convivencia-IEAG.apk
+          cp ManualConvivenciaIEAG/app/build/outputs/apk/debug/app-debug.apk Manual-Convivencia-IEAG-v0.2.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Manual-Convivencia-IEAG-APK
-          path: Manual-Convivencia-IEAG.apk
+          name: Manual-Convivencia-IEAG-v0.2-APK
+          path: Manual-Convivencia-IEAG-v0.2.apk
           if-no-files-found: error
