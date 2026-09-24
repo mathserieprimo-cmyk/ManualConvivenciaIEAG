@@ -1,8 +1,10 @@
-name: Build Android APK v0.2
+name: Build Android APK
 
 on:
   push:
-    branches: [ "build-v0.2" ]
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
@@ -34,11 +36,15 @@ jobs:
         with:
           gradle-version: '8.13'
 
-      - name: Reconstruct v0.2 project
+      - name: Reconstruct project
         shell: bash
         run: |
-          cat v02_parts/part*.txt | tr -d '\n\r' | base64 -d > source-v02.zip
-          unzip -q source-v02.zip
+          if [ -d v02_parts ]; then
+            cat v02_parts/part*.txt | tr -d '\n\r' | base64 -d > source.zip
+          else
+            cat source_parts/part*.txt | tr -d '\n\r' | base64 -d > source.zip
+          fi
+          unzip -q source.zip
           test -d ManualConvivenciaIEAG
           grep -n "versionName" ManualConvivenciaIEAG/app/build.gradle.kts
 
@@ -48,11 +54,11 @@ jobs:
 
       - name: Rename APK
         run: |
-          cp ManualConvivenciaIEAG/app/build/outputs/apk/debug/app-debug.apk Manual-Convivencia-IEAG-v0.2.apk
+          cp ManualConvivenciaIEAG/app/build/outputs/apk/debug/app-debug.apk Manual-Convivencia-IEAG.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Manual-Convivencia-IEAG-v0.2-APK
-          path: Manual-Convivencia-IEAG-v0.2.apk
+          name: Manual-Convivencia-IEAG-APK
+          path: Manual-Convivencia-IEAG.apk
           if-no-files-found: error
